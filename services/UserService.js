@@ -102,9 +102,23 @@ const deleteUser = async (id) => {
     };
 }
 
+const getAllActiveUsers = async () => {
+    const users = await db.User.findAll({
+        where: {
+            status: true
+        }
+    })
+
+    return {
+        code: users.length > 0 ? 200: 404,
+        message: users.length > 0 ? users: "No hay usuarios activos" 
+    };
+}
+
 export default {
     createUser,
     getUserById,
     updateUser,
     deleteUser,
+    getAllActiveUsers,
 }

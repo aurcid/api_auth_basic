@@ -11,6 +11,11 @@ router.post('/create', async (req, res) => {
     res.status(response.code).json(response.message);
 });
 
+router.get('/getAllUsers', async (req, res) => {
+    const response = await UserService.getAllActiveUsers();
+    res.status(response.code).json(response.message);
+});
+
 router.get(
     '/:id',
     [
