@@ -112,7 +112,12 @@ const getAllActiveUsers = async () => {
 
     return {
         code: users.length > 0 ? 200: 404,
-        message: users.length > 0 ? users: "No hay usuarios activos" 
+        message: users.length > 0 ? 
+        users: 
+        {
+            code: 404, 
+            message: 'No active users found'
+        }
     };
 }
 
@@ -120,7 +125,10 @@ const getAllFilteredUsers = async (req) => {
     if (Object.keys(req.query).length === 0) {
         return {
             code: 400,
-            message: "No hay parámetros de búsqueda" 
+            message: {
+                code: 400, 
+                message: 'No search parameters'
+            }
         };
     }
 
@@ -182,7 +190,12 @@ const getAllFilteredUsers = async (req) => {
 
     return {
         code: users.length > 0 ? 200: 404,
-        message: users.length > 0 ? users: "No hay resultados para esta búsqueda" 
+        message: users.length > 0 ? 
+        users: 
+        {
+            code: 404, 
+            message: 'No results for this search'
+        }
     };
 }
 
