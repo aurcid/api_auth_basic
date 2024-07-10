@@ -16,6 +16,11 @@ router.get('/getAllUsers', async (req, res) => {
     res.status(response.code).json(response.message);
 });
 
+router.get('/findUsers', async (req, res) => {
+    const response = await UserService.getAllFilteredUsers(req);
+    res.status(response.code).json(response.message);
+});
+
 router.get(
     '/:id',
     [

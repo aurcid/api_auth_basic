@@ -1,5 +1,6 @@
 import db from '../dist/db/models/index.js';
 import bcrypt from 'bcrypt';
+import { Op } from 'sequelize';
 
 const createUser = async (req) => {
     const {
@@ -115,10 +116,81 @@ const getAllActiveUsers = async () => {
     };
 }
 
+const getAllFilteredUsers = async (req) => {
+    if (Object.keys(req.query).length === 0) {
+        return {
+            code: 400,
+            message: "No hay parámetros de búsqueda" 
+        };
+    }
+
+    const { status, name, login_before, login_after } = req.query;
+    const where_users = {};
+    const where_sessions = {};
+
+    if (status !== undefined) {
+        where_users.status = (status.toLowerCase() === 'true' || status.toLowerCase() === '1');
+    }
+    
+    if (name) {
+        where_users.name = {
+            [Op.substring]: name
+        };
+    }
+
+    if (login_before) {
+        const format_date = new Date(login_before);
+        format_date.setUTCHours(23, 59, 59, 999);
+
+        where_sessions.createdAt = {
+            [Op.lte]: format_date
+        };
+    }
+
+    if (login_after) {
+        const format_date = new Date(login_after);
+        format_date.setUTCHours(0, 0, 0, 0);
+
+        if (where_sessions.createdAt?.[Op.lte]) {
+            where_sessions.createdAt[Op.or] = {
+                [Op.lte]: where_sessions.createdAt[Op.lte],
+                [Op.gte]: format_date
+            }
+            delete where_sessions.createdAt[Op.lte];
+        } else {
+            where_sessions.createdAt = {
+                [Op.gte]: format_date
+            };
+        }
+    }
+
+    const join_type = Object.keys(where_users).length === 0;
+    
+    const users = await db.User.findAll({
+        where: {
+            ...where_users
+        },
+        include: {
+            model: db.Session,
+            required: join_type,
+            attributes: [],
+            where: {
+                ...where_sessions
+            }
+        }
+    });
+
+    return {
+        code: users.length > 0 ? 200: 404,
+        message: users.length > 0 ? users: "No hay resultados para esta búsqueda" 
+    };
+}
+
 export default {
     createUser,
     getUserById,
     updateUser,
     deleteUser,
     getAllActiveUsers,
+    getAllFilteredUsers,
 }
