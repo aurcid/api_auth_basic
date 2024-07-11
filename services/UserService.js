@@ -132,12 +132,12 @@ const getAllFilteredUsers = async (req) => {
         };
     }
 
-    const { status, name, login_before, login_after } = req.query;
+    const { active, name, login_before_date, login_after_date } = req.query;
     const where_users = {};
     const where_sessions = {};
 
-    if (status !== undefined) {
-        where_users.status = (status.toLowerCase() === 'true' || status.toLowerCase() === '1');
+    if (active !== undefined) {
+        where_users.status = (active.toLowerCase() === 'true' || active.toLowerCase() === '1');
     }
     
     if (name) {
@@ -146,8 +146,8 @@ const getAllFilteredUsers = async (req) => {
         };
     }
 
-    if (login_before) {
-        const format_date = new Date(login_before);
+    if (login_before_date) {
+        const format_date = new Date(login_before_date);
         format_date.setUTCHours(23, 59, 59, 999);
 
         where_sessions.createdAt = {
@@ -155,8 +155,8 @@ const getAllFilteredUsers = async (req) => {
         };
     }
 
-    if (login_after) {
-        const format_date = new Date(login_after);
+    if (login_after_date) {
+        const format_date = new Date(login_after_date);
         format_date.setUTCHours(0, 0, 0, 0);
 
         if (where_sessions.createdAt?.[Op.lte]) {
