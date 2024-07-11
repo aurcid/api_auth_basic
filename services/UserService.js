@@ -199,6 +199,85 @@ const getAllFilteredUsers = async (req) => {
     };
 }
 
+const bulkUserCreate = async (req) => {
+    if (!req.body.hasOwnProperty('users')) {
+        return {
+            code: 400,
+            message: {
+                code: 400, 
+                message: 'No users to register',
+            }
+        };
+    }
+
+    const { users } = req.body;
+    const non_registered = [];
+    const new_users = [];
+
+    for (const user of users) {
+        const user_detail = {
+            user_name: user.name
+        };
+
+        if (user.password !== user.password_second) {
+            user_detail.password = 'passwords do not match';
+        }
+
+        const user_exists = await db.User.findOne({
+            where: {
+                email: user.email
+            }
+        });
+
+        if (user_exists) {
+            user_detail.email = 'User already exists';
+        }
+        
+        if (Object.keys(user_detail).length === 1) {
+            const encryptedPassword = await bcrypt.hash(user.password, 10);
+
+            new_users.push({
+                name: user.name,
+                email: user.email,
+                password: encryptedPassword,
+                cellphone: user.cellphone,
+                status: true
+            });
+
+        } else {
+            non_registered.push(user_detail);
+        }
+    }
+
+    if (new_users.length === 0) {
+        return {
+            code: 400,
+            message: {
+                code: 400, 
+                message: 'Users did not pass validation',
+                registered_users: new_users.length,
+                non_registered_users: non_registered.length,
+                non_registered_details: non_registered
+            }
+        };
+    }
+
+    const result = await db.User.bulkCreate(new_users);
+
+    return {
+        code: result.length > 0 ? 200: 400,
+        message: result.length > 0 ? {
+            code: 200,
+            registered_users: new_users.length,
+            non_registered_users: non_registered.length,
+            non_registered_details: non_registered
+        }: {
+            code: 400, 
+            message: 'Could not register new users'
+        }
+    };
+}
+
 export default {
     createUser,
     getUserById,
@@ -206,4 +285,5 @@ export default {
     deleteUser,
     getAllActiveUsers,
     getAllFilteredUsers,
+    bulkUserCreate,
 }
