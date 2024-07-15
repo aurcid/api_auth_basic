@@ -160,7 +160,7 @@ const getAllFilteredUsers = async (req) => {
         format_date.setUTCHours(0, 0, 0, 0);
 
         if (where_sessions.createdAt?.[Op.lte]) {
-            where_sessions.createdAt[Op.or] = {
+            where_sessions.createdAt[Op.and] = {
                 [Op.lte]: where_sessions.createdAt[Op.lte],
                 [Op.gte]: format_date
             }
@@ -172,7 +172,7 @@ const getAllFilteredUsers = async (req) => {
         }
     }
 
-    const join_type = Object.keys(where_users).length === 0;
+    const join_type = Object.keys(where_sessions).length > 0;
     
     const users = await db.User.findAll({
         where: {
@@ -181,7 +181,7 @@ const getAllFilteredUsers = async (req) => {
         include: {
             model: db.Session,
             required: join_type,
-            attributes: [],
+            attributes: ['createdAt'],
             where: {
                 ...where_sessions
             }
